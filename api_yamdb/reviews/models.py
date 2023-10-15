@@ -30,6 +30,13 @@ class User(AbstractUser):
         choices=ROLES,
         default='user'
     )
+    confirmation_code = models.CharField(
+        'код подтверждения',
+        max_length=255,
+        null=True,
+        blank=False,
+        default='XXXX'
+    )
 
     class Meta:
         ordering = ('username',)
