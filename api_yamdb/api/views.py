@@ -9,13 +9,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken
-from .permissions import (IsAdminOnlyPermission)
 from rest_framework import status, viewsets
 from .serializers import (UserMeSerializer, GenreSerializer,
                           CustomUserTokenSerializer, CategorySerializer,
                           UsersSerializer, RegistrationSerializer)
 
-from .permissions import IsAdminOrReadOnly
+from .permissions import (IsAdminOrPostOnly, IsAdminOrReadOnly,
+                          IsAdminOnlyPermission)
 from reviews.models import Genre, Category
 
 User = get_user_model()
@@ -24,10 +24,13 @@ User = get_user_model()
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all().order_by('id')
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOnlyPermission,)
+    permission_classes = (IsAdminOrPostOnly,)
     search_fields = ('name',)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(
@@ -40,50 +43,27 @@ class GenreViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def list(self, request, *args, **kwargs):
+        if request.method != 'GET':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().list(request, *args, **kwargs)
 
-'''class GenreViewSet(viewsets.ModelViewSet):
-    queryset = Genre.objects.all().order_by('id')
-    serializer_class = GenreSerializer
-    permission_classes = (IsAdminOnlyPermission,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    filter_backends = (filters.SearchFilter,)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            if request.user.is_admin:
-                serializer.save()
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED, headers=headers)
-            else:
-                return Response(
-                    "Only admin users can create categories",
-                    status=status.HTTP_403_FORBIDDEN)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def retrieve(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)'''
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def perform_create(self, serializer):
+        serializer.save()
 
-'''class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all().order_by('id')
-    serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    filter_backends = (filters.SearchFilter,)'''
+    def perform_update(self, serializer):
+        serializer.save()
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by('id')
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrPostOnly, IsAdminOrReadOnly)
     search_fields = ('name',)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
@@ -97,6 +77,26 @@ class CategoryViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+    def perform_update(self, serializer):
+        serializer.save()
 
 
 class TokenAPI(APIView):
