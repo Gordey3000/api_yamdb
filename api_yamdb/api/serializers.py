@@ -1,5 +1,5 @@
-from reviews.models import User
 from rest_framework import serializers
+from reviews.models import User
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -8,7 +8,6 @@ class UsersSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
-
 
 
 class UserMeSerializer(serializers.ModelSerializer):
@@ -21,11 +20,6 @@ class UserMeSerializer(serializers.ModelSerializer):
 
 
 class CustomUserTokenSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        required=True)
-    confirmation_code = serializers.CharField(
-        required=True)
-
     class Meta:
         model = User
         fields = (
@@ -35,7 +29,6 @@ class CustomUserTokenSerializer(serializers.ModelSerializer):
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ('email', 'username')
@@ -43,5 +36,5 @@ class RegistrationSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         if value == 'me':
             raise serializers.ValidationError(
-                'Использовать me в качестве поля username нельзя!')
+                'Невозможно использовать me в качестве поля username.')
         return value
