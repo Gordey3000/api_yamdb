@@ -1,13 +1,103 @@
+from reviews.models import User, Genre, Category, Title, Comment, Review
 from rest_framework import serializers
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 
-from reviews.models import Comment, Review, User
+
+class UsersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role')
 
 
-class UserSerializer(serializers.ModelSerializer):
-    posts = serializers.StringRelatedField(many=True, read_only=True)
+class UserMeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role')
+        read_only_fields = ('role',)
+
+
+class CustomUserTokenSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=True)
+    confirmation_code = serializers.CharField(
+        required=True)
 
     class Meta:
         model = User
+        fields = (
+            'username',
+            'confirmation_code'
+        )
+
+
+class RegistrationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email', 'username')
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Использовать me в качестве поля username нельзя!')
+        return value
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('name', 'slug')
+        model = Genre
+        lookup_field = 'slug'
+
+
+'''class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('name', 'slug')
+        model = Category
+        lookup_field = 'slug'
+        '''
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('name', 'slug')
+
+    def validate(self, attrs):
+        # Проверка на наличие обязательных полей и их правильность
+        if attrs.get('name') is None or attrs.get('slug') is None:
+            raise ValidationError("Некорректные данные")
+        return attrs
+
+
+class TitleCreateSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug'
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
+
+    class Meta:
+        model = Title
+        fields = '__all__'
+
+
+class TitleReadSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(read_only=True, many=True)
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Title
         fields = '__all__'
 
 
@@ -15,17 +105,22 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
-    score = serializers.SerializerMethodField()
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
 
-    def get_score(self, obj):
-        score = obj.score.aggregate(sum('score'))['score__sum']
-        if score:
-            return score / obj.score.count()
-        return 0
+    def validate(self, data):
+        request = self.context.get('request')
+        title_id = self.context.get('view').kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        author = request.user
+        if request.method == 'POST':
+            if Review.objects.filter(author=author, title=title).exists():
+                raise serializers.ValidationError(
+                    'Вы уже оставляли отзыв на данный контент!'
+                )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -34,5 +129,5 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
