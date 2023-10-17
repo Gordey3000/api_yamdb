@@ -1,4 +1,6 @@
-from .views import (TokenAPI, UserViewSet, SignUpApi,
+from .views import (TokenAPI,
+                    UserViewSet,
+                    SignUpApi,
                     GenreViewSet,
                     CategoryViewSet,
                     CommentViewSet,
