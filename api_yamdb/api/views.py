@@ -58,7 +58,7 @@ class UserViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
-        methods=['GET', 'PATCH',],
+        methods=['GET', 'PATCH', ],
         detail=False,
         permission_classes=(IsAuthenticated,),
         url_path='me')
