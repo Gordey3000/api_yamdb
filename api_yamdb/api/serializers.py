@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
@@ -59,7 +60,7 @@ class CategorySerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         # Проверка на наличие обязательных полей и их правильность
         if attrs.get('name') is None or attrs.get('slug') is None:
-            raise ValidationError("Некорректные данные")
+            raise ValidationError('Некорректные данные')
         return attrs
 
 
