@@ -114,11 +114,15 @@ class Title(models.Model):
 
 class Review(models.Model):
     title = models.ForeignKey(
-        Title, verbose_name = 'Произведение', on_delete=models.CASCADE, related_name='review'
+        Title, verbose_name='Произведение',
+        on_delete=models.CASCADE,
+        related_name='review'
     )
     text = models.TextField(verbose_name='Текст отзыва')
     author = models.ForeignKey(
-        User, verbose_name='Автор отзыва', on_delete=models.CASCADE, related_name='reviews')
+        User, verbose_name='Автор отзыва',
+        on_delete=models.CASCADE,
+        related_name='reviews')
     score = models.PositiveSmallIntegerField(
         verbose_name='Рейтинг',
         default=0,
@@ -146,9 +150,13 @@ class Review(models.Model):
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        User, verbose_name='Автор комментария', on_delete=models.CASCADE, related_name='comment')
+        User, verbose_name='Автор комментария',
+        on_delete=models.CASCADE,
+        related_name='comment')
     review = models.ForeignKey(
-        Review, verbose_name='Отзыв', on_delete=models.CASCADE, related_name='comments')
+        Review, verbose_name='Отзыв',
+        on_delete=models.CASCADE,
+        related_name='comments')
     text = models.TextField(verbose_name='Текст комментария')
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)

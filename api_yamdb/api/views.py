@@ -82,7 +82,8 @@ class SignUpApi(APIView):
 
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
-        user = User.objects.filter(username=request.data.get('username'), email=request.data.get('email')).first()
+        user = User.objects.filter(username=request.data.get('username'),
+                                   email=request.data.get('email')).first()
         if user:
             serializer = RegistrationSerializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -164,7 +165,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         return title.review.all()
-
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
