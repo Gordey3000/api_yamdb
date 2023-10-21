@@ -60,7 +60,7 @@ class CategorySerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         # Проверка на наличие обязательных полей и их правильность
         if attrs.get('name') is None or attrs.get('slug') is None:
-            raise ValidationError('Некорректные данные')
+            raise ValidationError('Некорректное поле name или slug')
         return attrs
 
 
@@ -100,12 +100,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
-        request = self.context.get('request')
+        request = self.context['request']
         title_id = self.context.get('view').kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
         author = request.user
         if request.method == 'POST':
-            if Review.objects.filter(author=author, title=title).exists():
+            if title.review.filter(author=author).exists():
                 raise serializers.ValidationError(
                     'Вы уже оставляли отзыв на данный контент!'
                 )

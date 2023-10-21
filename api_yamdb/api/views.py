@@ -82,9 +82,9 @@ class SignUpApi(APIView):
 
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
-        if (User.objects.filter(username=request.data.get('username'),
-                                email=request.data.get('email')).first()):
-            user = User.objects.get(username=request.data.get('username'))
+        user = User.objects.filter(username=request.data.get('username'),
+                                   email=request.data.get('email')).first()
+        if user:
             serializer = RegistrationSerializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
