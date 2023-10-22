@@ -29,7 +29,7 @@ User = get_user_model()
 
 class TokenAPI(APIView):
 
-    '''Отправляет и обновляет токен пользователю.'''
+    """Отправляет и обновляет токен пользователю."""
 
     def post(self, request):
         serializer = CustomUserTokenSerializer(data=request.data)
@@ -47,7 +47,7 @@ class TokenAPI(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
 
-    '''Получение и редактирование информации о пользователе.'''
+    """Получение и редактирование информации о пользователе."""
 
     queryset = User.objects.all()
     serializer_class = UsersSerializer
@@ -78,7 +78,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class SignUpApi(APIView):
 
-    '''Получение confirmation_code на email при регистрации.'''
+    """Получение confirmation_code на email при регистрации."""
 
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
@@ -162,14 +162,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         'get', 'post', 'patch', 'delete'
     ]
 
+    def get_title_id(self):
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+
     def get_queryset(self):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        return title.review.all()
+        return self.get_title_id().review.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user,
-                        title=title)
+                        title=self.get_title_id())
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -180,15 +181,14 @@ class CommentViewSet(viewsets.ModelViewSet):
         'get', 'post', 'patch', 'delete'
     ]
 
+    def get_review(self):
+        return get_object_or_404(Review,
+                                 id=self.kwargs.get('review_id'),
+                                 title_id=self.kwargs.get('title_id'))
+
     def get_queryset(self):
-        get_review = get_object_or_404(Review,
-                                       id=self.kwargs.get('review_id'),
-                                       title_id=self.kwargs.get('title_id'))
-        return get_review.comments.all()
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        get_review = get_object_or_404(Review,
-                                       id=self.kwargs.get('review_id'),
-                                       title_id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user,
-                        review=get_review)
+                        review=self.get_review())
